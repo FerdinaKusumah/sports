@@ -11,7 +11,7 @@
             <h1>League sports result</h1>
         </div>
         <div class="col-sm-12">
-            <h1>Rank data</h1>
+            <h1>Final data</h1>
             <div class="col-xs-6">
                 <h4>Statistic data</h4>
                 <table class="statistic-table display nowrap" style="width:100%">
@@ -79,8 +79,9 @@
             </div>
             <div class="col-xs-6">
                 <h4>League score</h4>
-                <button class="btn btn-primary btn-sm" id="modelLeague" type="button">Add league
+                <button class="btn btn-primary btn-sm" id="modalLeague" type="button">Add league
                 </button>
+                <button class="btn btn-danger btn-sm" id="modalUpload" type="button">Upload csv</button>
                 <table class="league-table display nowrap" style="width:100%">
                     <thead>
                     <tr>
@@ -108,6 +109,7 @@
 
 {% include "includes/league.modals.html" %}
 {% include "includes/teams.modals.html" %}
+{% include "includes/upload.modals.html" %}
 
 <script>
     $(document).ready(function () {
@@ -116,6 +118,7 @@
             TeamUrl: "http://localhost:8000/team",
             StatisticUrl: "http://localhost:8000/statistic",
             RankUrl: "http://localhost:8000/rank",
+            UploadUrl: "http://localhost:8000/upload",
         };
 
         const component = {
@@ -124,8 +127,13 @@
             StatisticTable: $(".statistic-table"),
             RankTable: $(".rank-table"),
             ModalButtonTeam: $("#modalTeam"),
-            ModalButtonLeague: $("#modelLeague"),
+            ModalButtonLeague: $("#modalLeague"),
+            ModalButtonUpload: $("#modalUpload"),
             ModalLeague: $("#leagueModal"),
+            ModalUpload: $("#UploadModal"),
+            ModalUploadField: {
+                upload: $("#uploadFile"),
+            },
             ModalLeagueField: {
                 id: $("#leagueId"),
                 homeName: $("#homeName"),
@@ -135,6 +143,8 @@
             },
             SaveButtonTeam: $("#saveTeams"),
             SaveButtonLeague: $("#saveLeague"),
+            DownloadButtonTemplate: $("#downloadTemplateUrl"),
+            SaveButtonUpload: $("#saveFile"),
             ModalTeam: $("#teamsModal"),
             ModalTeamField: {
                 id: $("#teamId"),
@@ -418,6 +428,40 @@
                     },
                 });
             }
+        });
+
+        // onclick bulk upload csv
+        component.ModalButtonUpload.on("click", function(){
+            component.DownloadButtonTemplate.attr("href", Utils.UploadUrl);
+            component.ModalUpload.modal("show");
+        });
+
+        // save upload
+        component.SaveButtonUpload.on("click", function(){
+            const file = component.ModalUploadField.upload.prop("files");
+            if(file.length === 0) return;
+
+            const fileToUpload = file[0];
+            const formData = new FormData();
+            formData.append("file", fileToUpload);
+            $.ajax({
+                "method": "POST",
+                "url": Utils.UploadUrl,
+                "headers": {"X-CSRFToken": "{{ csrf_token }}"},
+                "data": formData,
+                "processData": false,
+                "contentType":false,
+                "success": function(resp){
+                    // remove file input
+                    component.ModalUploadField.upload.val("");
+                    // refresh all table
+                    teamsTable.ajax.reload();
+                    leagueTable.ajax.reload();
+                    statisticTable.ajax.reload();
+                    rankTable.ajax.reload();
+                    component.ModalUpload.modal("hide");
+                }
+            });
         });
 
     });

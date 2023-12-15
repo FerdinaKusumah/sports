@@ -1,7 +1,8 @@
 import json
+import csv
+import os
 from http import HTTPStatus
-
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from django.views.generic import TemplateView, View
 
@@ -12,6 +13,7 @@ from .backends import (
     TeamsController,
     StatisticController,
     RankController,
+    UploadController,
 )
 
 
@@ -142,3 +144,44 @@ class RankView(View):
         cls = RankController()
         data = cls.calculate_rank()
         return JsonResponse({"data": data}, status=HTTPStatus.OK)
+
+
+class UploadView(View):
+    def get(self, request, *args, **kwargs):
+        """Download example csv"""
+        file_path = os.path.join(
+            os.path.dirname(__file__), UploadController.get_file_path()
+        )
+        with open(file_path, "rb") as file:
+            response = HttpResponse(
+                file.read(), content_type="application/octet-stream"
+            )
+
+        # Set the Content-Disposition header for download
+        response[
+            "Content-Disposition"
+        ] = f'attachment; filename="{os.path.basename(file_path)}"'
+        return response
+
+    def post(self, request, *args, **kwargs):
+        """Receive file upload and doing upsert to database"""
+        file = request.FILES["file"]
+        # Decode the file content and split it into lines
+        decoded_file = file.read().decode("utf-8").splitlines()
+        # Use the csv.reader to read the CSV content
+        csv_reader = csv.reader(decoded_file)
+
+        # process and build file from csv as list of dictionary
+        records, headers = [], []
+        for k, row in enumerate(csv_reader):
+            # construct headers for first row
+            if k == 0:
+                headers = row
+                continue
+
+            records.append(dict(zip(headers, row)))
+
+        # send the data for further process
+        cls = UploadController.from_file(records)
+        cls.store()
+        return JsonResponse({"status": "ok"}, status=HTTPStatus.OK)

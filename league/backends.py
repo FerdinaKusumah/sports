@@ -155,6 +155,13 @@ class StatisticController:
         :return: list of dictionary
         """
         # map all teams
+        """
+        p -> means play
+        w -> means win
+        d -> means draw
+        l -> means lose
+        pts -> means total points
+        """
         teams = {
             o.id.__str__(): {"name": o.name, "p": 0, "w": 0, "d": 0, "l": 0, "pts": 0}
             for o in Teams.objects.all()
@@ -193,6 +200,9 @@ class StatisticController:
 
 
 class RankController:
+    # get top 5 from league rank
+    max_rank: int = 5
+
     @staticmethod
     def calculate_rank() -> list[dict[str, Any]]:
         """Sort teams based on higher points if have some points then sort by teams name"""
@@ -202,5 +212,79 @@ class RankController:
         # map value and return result
         ret = []
         for k, stat in enumerate(resp):
+            if RankController.max_rank == k:
+                break
+
             ret.append({"rank": k + 1, "team": stat["name"], "point": stat["pts"]})
         return ret
+
+
+class UploadController:
+    # we can change actual path in settings
+    template_upload_path: str = "templates/upload/league.csv"
+
+    def __init__(self, records: list[dict[str, Any]]):
+        self.records = records
+        self.cache = {}
+
+    @classmethod
+    def from_file(cls, records: list[dict[str, Any]]) -> "UploadController":
+        return cls(records)
+
+    @staticmethod
+    def get_file_path() -> str:
+        """return file path template upload"""
+        return UploadController.template_upload_path
+
+    def populate_team_ids(self):
+        """Get teams id for each records
+        here we can utilize using redis or some cache provider
+        for this example we will user memory cache
+        we will process the data in ON
+        :return:
+        """
+        # assumption the data is valid
+        teams = {}
+        for rec in self.records:
+            teams[rec["team_1_name"]] = rec["team_1_name"]
+            teams[rec["team_2_name"]] = rec["team_2_name"]
+
+        # check for all available teams
+        db_teams = Teams.objects.filter(name__in=list(teams.values()))
+        available_teams = {o.name: o.id.__str__() for o in db_teams}
+
+        # now compare available vs file upload
+        for team in teams.values():
+            if team in available_teams:
+                teams[team] = {"id": available_teams[team]}
+            else:
+                rec = Teams.objects.create(name=team)
+                teams[team] = {"id": rec.id.__str__()}
+
+        # store result to cache
+        self.cache = teams
+
+    def store(self) -> bool:
+        """Store data to database"""
+        # populate data teams before inserting data
+        self.populate_team_ids()
+
+        # now we can easily construct the data
+        # and doing bulk insert
+        records = []
+        for rec in self.records:
+            payload = Tournament(
+                **{
+                    "id": uuid.uuid4(),
+                    "home_id": self.cache[rec["team_1_name"]]["id"],
+                    "away_id": self.cache[rec["team_2_name"]]["id"],
+                    "home_score": rec["team_1_score"],
+                    "away_score": rec["team_2_score"],
+                }
+            )
+            records.append(payload)
+
+        # insert all data one time
+        # here if the data is large we can use queue or chunking value
+        Tournament.objects.bulk_create(records)
+        return True

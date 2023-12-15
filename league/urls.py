@@ -1,4 +1,4 @@
-from .views import HomeView, LeagueView, TeamsView, StatisticView, RankView
+from .views import HomeView, LeagueView, TeamsView, StatisticView, RankView, UploadView
 from django.urls import path
 
 urlpatterns = [
@@ -13,4 +13,6 @@ urlpatterns = [
     path("statistic", StatisticView.as_view(), name="statistic"),
     # rank url
     path("rank", RankView.as_view(), name="rank"),
+    # upload csv url
+    path("upload", UploadView.as_view(), name="upload"),
 ]
