@@ -2,6 +2,8 @@
 
 {% block title %} Home {% endblock title %}
 
+{% load static %}
+
 {% block content %}
 
 <!--  table result  -->
@@ -10,461 +12,42 @@
         <div class="jumbotron">
             <h1>League sports result</h1>
         </div>
+        <input id="csrfToken" type="hidden" value="{{ csrf_token }}">
         <div class="col-sm-12">
             <h1>Final data</h1>
             <div class="col-xs-6">
-                <h4>Statistic data</h4>
-                <table class="statistic-table display nowrap" style="width:100%">
-                    <thead>
-                    <tr>
-                        <th scope="col">Teams</th>
-                        <th scope="col">Play</th>
-                        <th scope="col">Win</th>
-                        <th scope="col">Draw</th>
-                        <th scope="col">Lose</th>
-                        <th scope="col">Points</th>
-                    </tr>
-                    </thead>
-                    <tfoot>
-                    <tr>
-                        <th scope="col">Teams</th>
-                        <th scope="col">Play</th>
-                        <th scope="col">Win</th>
-                        <th scope="col">Draw</th>
-                        <th scope="col">Lose</th>
-                        <th scope="col">Points</th>
-                    </tr>
-                    </tfoot>
-                </table>
+                {% include "includes/statistic.table.html" %}
             </div>
             <div class="col-xs-6">
-                <h4>Rank data</h4>
-                <table class="rank-table display nowrap" style="width:100%">
-                    <thead>
-                    <tr>
-                        <th scope="col">Rank</th>
-                        <th scope="col">Team</th>
-                        <th scope="col">Points</th>
-                    </tr>
-                    </thead>
-                    <tfoot>
-                    <tr>
-                        <th scope="col">Rank</th>
-                        <th scope="col">Team</th>
-                        <th scope="col">Points</th>
-                    </tr>
-                    </tfoot>
-                </table>
+                {% include "includes/rank.table.html" %}
             </div>
         </div>
         <div class="col-sm-12">
             <h1>Source Data</h1>
             <div class="col-xs-6">
-                <h4>Teams</h4>
-                <button class="btn btn-primary btn-sm" id="modalTeam" type="button">Add team</button>
-                <table class="team-table display nowrap" style="width:100%">
-                    <thead>
-                    <tr>
-                        <th scope="col">Name</th>
-                        <th scope="col">Actions</th>
-                    </tr>
-                    </thead>
-                    <tfoot>
-                    <tr>
-                        <th scope="col">Name</th>
-                        <th scope="col">Actions</th>
-                    </tr>
-                    </tfoot>
-                </table>
+                {% include "includes/teams.table.html" %}
             </div>
             <div class="col-xs-6">
-                <h4>League score</h4>
-                <button class="btn btn-primary btn-sm" id="modalLeague" type="button">Add league
-                </button>
-                <button class="btn btn-danger btn-sm" id="modalUpload" type="button">Upload csv</button>
-                <table class="league-table display nowrap" style="width:100%">
-                    <thead>
-                    <tr>
-                        <th scope="col">Home</th>
-                        <th scope="col">Home Score</th>
-                        <th scope="col">Away</th>
-                        <th scope="col">Away Score</th>
-                        <th scope="col">Actions</th>
-                    </tr>
-                    </thead>
-                    <tfoot>
-                    <tr>
-                        <th scope="col">Home</th>
-                        <th scope="col">Home Score</th>
-                        <th scope="col">Away</th>
-                        <th scope="col">Away Score</th>
-                        <th scope="col">Actions</th>
-                    </tr>
-                    </tfoot>
-                </table>
+                {% include "includes/league.table.html" %}
             </div>
         </div>
     </div>
 </div>
 
+<!--include templates-->
 {% include "includes/league.modals.html" %}
 {% include "includes/teams.modals.html" %}
 {% include "includes/upload.modals.html" %}
 
-<script>
-    $(document).ready(function () {
-        const Utils = {
-            LeagueUrl: "http://localhost:8000/league",
-            TeamUrl: "http://localhost:8000/team",
-            StatisticUrl: "http://localhost:8000/statistic",
-            RankUrl: "http://localhost:8000/rank",
-            UploadUrl: "http://localhost:8000/upload",
-        };
+<!--include javascript controller-->
+<script src="{% static '/core/constants.js' %}"></script>
+<script src="{% static '/core/component.js' %}"></script>
+<script src="{% static '/core/datatables.js' %}"></script>
+<script src="{% static '/core/services.js' %}"></script>
 
-        const component = {
-            LeagueTable: $(".league-table"),
-            TeamTable: $(".team-table"),
-            StatisticTable: $(".statistic-table"),
-            RankTable: $(".rank-table"),
-            ModalButtonTeam: $("#modalTeam"),
-            ModalButtonLeague: $("#modalLeague"),
-            ModalButtonUpload: $("#modalUpload"),
-            ModalLeague: $("#leagueModal"),
-            ModalUpload: $("#UploadModal"),
-            ModalUploadField: {
-                upload: $("#uploadFile"),
-            },
-            ModalLeagueField: {
-                id: $("#leagueId"),
-                homeName: $("#homeName"),
-                homeScore: $("#homeScore"),
-                awayName: $("#awayName"),
-                awayScore: $("#awayScore"),
-            },
-            SaveButtonTeam: $("#saveTeams"),
-            SaveButtonLeague: $("#saveLeague"),
-            DownloadButtonTemplate: $("#downloadTemplateUrl"),
-            SaveButtonUpload: $("#saveFile"),
-            ModalTeam: $("#teamsModal"),
-            ModalTeamField: {
-                id: $("#teamId"),
-                name: $("#teamName"),
-            }
-        }
-
-        // prepare statistic data table
-        const statisticTable = component.StatisticTable.DataTable({
-            ajax: {
-                method: "GET",
-                url: Utils.StatisticUrl
-            },
-            columns: [
-                {data: "name"},
-                {data: "p"},
-                {data: "w"},
-                {data: "d"},
-                {data: "l"},
-                {data: "pts"},
-            ],
-            processing: true,
-        });
-
-        // prepare final rank data table
-        const rankTable = component.RankTable.DataTable({
-            ajax: {
-                method: "GET",
-                url: Utils.RankUrl
-            },
-            columns: [
-                {data: "rank"},
-                {data: "team"},
-                {data: "point"},
-            ],
-            ordering: false,
-            processing: true,
-        });
-
-        // prepare league data table
-        const leagueTable = component.LeagueTable.DataTable({
-            ajax: {
-                method: "GET",
-                url: Utils.LeagueUrl,
-            },
-            columns: [
-                {data: "home"},
-                {data: "home_score"},
-                {data: "away"},
-                {data: "away_score"},
-                {
-                    data: "id",
-                    render: function (data, type, row, meta) {
-                        const editBtn = `<button class="btn xs btn-warning" data-model-name="edit">Edit</button>`
-                        const deleteBtn = `<button class="btn xs btn-danger" data-model-name="delete">Delete</button>`
-                        return `${editBtn} | ${deleteBtn}`;
-                    },
-                },
-            ],
-            processing: true,
-        });
-
-        // prepare teams data table
-        const teamsTable = component.TeamTable.DataTable({
-            ajax: {
-                method: "GET",
-                url: Utils.TeamUrl
-            },
-            columns: [
-                {data: "name"},
-                {
-                    data: "id",
-                    render: function (data, type, row, meta) {
-                        const editBtn = `<button class="btn xs btn-warning" data-model-name="edit">Edit</button>`
-                        const deleteBtn = `<button class="btn xs btn-danger" data-model-name="delete">Delete</button>`
-                        return `${editBtn} | ${deleteBtn}`;
-                    },
-                },
-            ],
-            processing: true,
-        });
-
-        // on click create new teams
-        component.ModalButtonTeam.on("click", function () {
-            component.ModalTeam.modal("show");
-        });
-
-        // save new teams
-        component.SaveButtonTeam.on("click", function () {
-            if (component.ModalTeamField.name.val().length === 0) return;
-            // if no id then create
-            if (component.ModalTeamField.id.val().length === 0) {
-                $.ajax({
-                    "method": "POST",
-                    "url": Utils.TeamUrl,
-                    "contentType": "application/json",
-                    "data": JSON.stringify({"name": component.ModalTeamField.name.val()}),
-                    "headers": {"X-CSRFToken": "{{ csrf_token }}"},
-                    "success": function (resp) {
-                        teamsTable.ajax.reload();
-                        component.ModalTeam.modal("hide");
-                    },
-                    "error": function (err) {
-                        teamsTable.ajax.reload();
-                        component.ModalTeam.modal("hide");
-                    },
-                });
-            } else {
-                $.ajax({
-                    "method": "PUT",
-                    "url": `${Utils.TeamUrl}/${component.ModalTeamField.id.val()}`,
-                    "headers": {"X-CSRFToken": "{{ csrf_token }}"},
-                    "data": JSON.stringify({"name": component.ModalTeamField.name.val()}),
-                    "success": function (resp) {
-                        teamsTable.ajax.reload();
-                        leagueTable.ajax.reload();
-                        statisticTable.ajax.reload();
-                        rankTable.ajax.reload();
-                        component.ModalTeam.modal("hide");
-                    },
-                    "contentType": "application/json",
-                    "error": function (err) {
-                        teamsTable.ajax.reload();
-                        leagueTable.ajax.reload();
-                        statisticTable.ajax.reload();
-                        rankTable.ajax.reload();
-                        component.ModalTeam.modal("hide");
-                    },
-                });
-            }
-            component.ModalTeamField.name.val("");
-        });
-
-        // function edit teams
-        teamsTable.on('click', 'tbody > tr > td > button', function () {
-            const data = teamsTable.row($(this).closest("td")).data();
-            const attr = $(this).attr("data-model-name");
-            if (attr === "edit") {
-                component.ModalTeamField.name.val(data.name);
-                component.ModalTeam.modal("show");
-                component.ModalTeamField.id.val(data.id);
-            } else {
-                $.ajax({
-                    "method": "DELETE",
-                    "url": `${Utils.TeamUrl}/${data.id}`,
-                    "contentType": "application/json",
-                    "headers": {"X-CSRFToken": "{{ csrf_token }}"},
-                    "success": function (resp) {
-                        teamsTable.ajax.reload();
-                    },
-                    "error": function (err) {
-                        teamsTable.ajax.reload();
-                    },
-                });
-            }
-        });
-
-        // on click create new league
-        component.ModalButtonLeague.on("click", function () {
-            // fetch data teams
-            $.ajax({
-                "method": "GET",
-                "url": Utils.TeamUrl,
-                "headers": {"X-CSRFToken": "{{ csrf_token }}"},
-                "success": function (resp) {
-                    $.each(resp.data, function (key, val) {
-                        component.ModalLeagueField.homeName.append(new Option(val.name, val.id));
-                        component.ModalLeagueField.awayName.append(new Option(val.name, val.id));
-                    });
-                    component.ModalLeague.modal("show");
-                },
-                "contentType": "application/json",
-                "error": function (err) {
-                    console.log(err);
-                },
-            });
-        });
-
-        // save new league
-        component.SaveButtonLeague.on("click", function () {
-            const homeNameEmpty = component.ModalLeagueField.homeName.val().length === 0;
-            const awayNameEmpty = component.ModalLeagueField.awayName.val().length === 0;
-            const homeScoreEmpty = component.ModalLeagueField.homeScore.val().length === 0;
-            const awayScoreEmpty = component.ModalLeagueField.awayScore.val().length === 0;
-            if (homeNameEmpty || awayNameEmpty || homeScoreEmpty || awayScoreEmpty) return;
-
-            const payload = {
-                "home_id": component.ModalLeagueField.homeName.val(),
-                "away_id": component.ModalLeagueField.awayName.val(),
-                "home_score": component.ModalLeagueField.homeScore.val(),
-                "away_score": component.ModalLeagueField.awayScore.val(),
-            };
-            // if no id then create
-            if (component.ModalLeagueField.id.val().length === 0) {
-                $.ajax({
-                    "method": "POST",
-                    "url": Utils.LeagueUrl,
-                    "contentType": "application/json",
-                    "data": JSON.stringify(payload),
-                    "headers": {"X-CSRFToken": "{{ csrf_token }}"},
-                    "success": function (resp) {
-                        leagueTable.ajax.reload();
-                        statisticTable.ajax.reload();
-                        rankTable.ajax.reload();
-                        component.ModalLeague.modal("hide");
-                    },
-                    "error": function (err) {
-                        leagueTable.ajax.reload();
-                        statisticTable.ajax.reload();
-                        rankTable.ajax.reload();
-                        component.ModalLeague.modal("hide");
-                    },
-                });
-            } else {
-                $.ajax({
-                    "method": "PUT",
-                    "url": `${Utils.LeagueUrl}/${component.ModalLeagueField.id.val()}`,
-                    "headers": {"X-CSRFToken": "{{ csrf_token }}"},
-                    "data": JSON.stringify(payload),
-                    "success": function (resp) {
-                        leagueTable.ajax.reload();
-                        statisticTable.ajax.reload();
-                        rankTable.ajax.reload();
-                        component.ModalLeague.modal("hide");
-                    },
-                    "contentType": "application/json",
-                    "error": function (err) {
-                        leagueTable.ajax.reload();
-                        statisticTable.ajax.reload();
-                        rankTable.ajax.reload();
-                        component.ModalLeague.modal("hide");
-                    },
-                });
-            }
-
-            component.ModalLeagueField.homeName.children().remove();
-            component.ModalLeagueField.awayName.children().remove();
-            component.ModalLeagueField.homeScore.val("");
-            component.ModalLeagueField.awayScore.val("");
-        });
-
-        // function edit league
-        leagueTable.on('click', 'tbody > tr > td > button', function () {
-            const data = leagueTable.row($(this).closest("td")).data();
-            const attr = $(this).attr("data-model-name");
-            if (attr === "edit") {
-                // fetch data teams
-                $.ajax({
-                    "method": "GET",
-                    "url": Utils.TeamUrl,
-                    "headers": {"X-CSRFToken": "{{ csrf_token }}"},
-                    "success": function (resp) {
-                        $.each(resp.data, function (key, val) {
-                            component.ModalLeagueField.homeName.append(new Option(val.name, val.id));
-                            component.ModalLeagueField.awayName.append(new Option(val.name, val.id));
-                        });
-
-                        component.ModalLeagueField.id.val(data.id);
-                        component.ModalLeagueField.homeName.val(data.home_id);
-                        component.ModalLeagueField.awayName.val(data.away_id);
-                        component.ModalLeagueField.homeScore.val(data.home_score);
-                        component.ModalLeagueField.awayScore.val(data.away_score);
-                        component.ModalLeague.modal("show");
-                    },
-                    "contentType": "application/json",
-                    "error": function (err) {
-                        console.log(err);
-                    },
-                });
-            } else {
-                $.ajax({
-                    "method": "DELETE",
-                    "url": `${Utils.LeagueUrl}/${data.id}`,
-                    "contentType": "application/json",
-                    "headers": {"X-CSRFToken": "{{ csrf_token }}"},
-                    "success": function (resp) {
-                        leagueTable.ajax.reload();
-                    },
-                    "error": function (err) {
-                        leagueTable.ajax.reload();
-                    },
-                });
-            }
-        });
-
-        // onclick bulk upload csv
-        component.ModalButtonUpload.on("click", function(){
-            component.DownloadButtonTemplate.attr("href", Utils.UploadUrl);
-            component.ModalUpload.modal("show");
-        });
-
-        // save upload
-        component.SaveButtonUpload.on("click", function(){
-            const file = component.ModalUploadField.upload.prop("files");
-            if(file.length === 0) return;
-
-            const fileToUpload = file[0];
-            const formData = new FormData();
-            formData.append("file", fileToUpload);
-            $.ajax({
-                "method": "POST",
-                "url": Utils.UploadUrl,
-                "headers": {"X-CSRFToken": "{{ csrf_token }}"},
-                "data": formData,
-                "processData": false,
-                "contentType":false,
-                "success": function(resp){
-                    // remove file input
-                    component.ModalUploadField.upload.val("");
-                    // refresh all table
-                    teamsTable.ajax.reload();
-                    leagueTable.ajax.reload();
-                    statisticTable.ajax.reload();
-                    rankTable.ajax.reload();
-                    component.ModalUpload.modal("hide");
-                }
-            });
-        });
-
-    });
-</script>
+<!--core module-->
+<script src="{% static '/core/teams.js' %}"></script>
+<script src="{% static '/core/league.js' %}"></script>
+<script src="{% static '/core/upload.js' %}"></script>
 
 {% endblock content %}
