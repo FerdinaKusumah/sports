@@ -17,3 +17,9 @@ install:
 
 update:
 	poetry update
+
+dump:
+	poetry run python manage.py dumpdata --indent 2 > fixtures/db.json
+
+restore:
+	poetry run python manage.py loaddata fixtures/db.json
