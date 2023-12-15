@@ -1,0 +1,50 @@
+<!-- The modal -->
+<div aria-hidden="true" aria-labelledby="modalLabel" class="modal fade" id="leagueModal" role="dialog" tabindex="-1">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button aria-label="Close" class="close" data-dismiss="modal" type="button">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="modalLabel">League</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form-horizontal" role="form">
+                    <input id="leagueId" type="hidden" value="">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="homeName">Home Name</label>
+                        <div class="col-sm-8">
+                            <select class="form-control" id="homeName"></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="homeScore">Away Score</label>
+                        <div class="col-sm-8">
+                            <input class="form-control" id="homeScore" placeholder="Home score" type="number"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="awayName">Away Name</label>
+                        <div class="col-sm-8">
+                            <select class="form-control" id="awayName"></select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="awayScore">Away Score</label>
+                        <div class="col-sm-8">
+                            <input class="form-control" id="awayScore" placeholder="Away score" type="number"/>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-8 col-sm-10">
+                            <button class="btn btn-primary" id="saveLeague" type="button">Update</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-dismiss="modal" type="button">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
