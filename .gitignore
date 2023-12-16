@@ -74,6 +74,9 @@ target/
 # celery db
 *.db
 
+# sqlite db
+*.sqlite
+
 # virtual env
 /venv
 
