@@ -1,5 +1,6 @@
 import uuid
 from typing import Union, Any
+
 from .models import Tournament, Teams
 
 
@@ -16,9 +17,11 @@ class TournamentDtoRequest:
         self.away_score = away_score
 
     @classmethod
-    def from_payload(cls, **kwargs) -> "TournamentDtoRequest":
+    def from_payload(
+        cls, home_id: str, home_score: int, away_id: str, away_score: int
+    ) -> "TournamentDtoRequest":
         """Initialize new object"""
-        return cls(**kwargs)
+        return cls(home_id, home_score, away_id, away_score)
 
     @property
     def to_dict(self):
@@ -225,7 +228,6 @@ class UploadController:
 
     def __init__(self, records: list[dict[str, Any]]):
         self.records = records
-        self.cache = {}
 
     @classmethod
     def from_file(cls, records: list[dict[str, Any]]) -> "UploadController":
@@ -236,10 +238,10 @@ class UploadController:
         """return file path template upload"""
         return UploadController.template_upload_path
 
-    def populate_team_ids(self):
+    def populate_team_ids(self) -> dict[str, Any]:
         """Get teams id for each records
         here we can utilize using redis or some cache provider
-        for this example we will user memory cache
+        for this example we will use memory cache
         we will process the data in ON
         :return:
         """
@@ -261,13 +263,12 @@ class UploadController:
                 rec = Teams.objects.create(name=team)
                 teams[team] = {"id": rec.id.__str__()}
 
-        # store result to cache
-        self.cache = teams
+        return teams
 
     def store(self) -> bool:
         """Store data to database"""
         # populate data teams before inserting data
-        self.populate_team_ids()
+        teams = self.populate_team_ids()
 
         # now we can easily construct the data
         # and doing bulk insert
@@ -276,8 +277,8 @@ class UploadController:
             payload = Tournament(
                 **{
                     "id": uuid.uuid4(),
-                    "home_id": self.cache[rec["team_1_name"]]["id"],
-                    "away_id": self.cache[rec["team_2_name"]]["id"],
+                    "home_id": teams[rec["team_1_name"]]["id"],
+                    "away_id": teams[rec["team_2_name"]]["id"],
                     "home_score": rec["team_1_score"],
                     "away_score": rec["team_2_score"],
                 }

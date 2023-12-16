@@ -8,19 +8,20 @@ This project is for showing rank league sports
 - [Features](#features)
 - [Requirements](#requirements)
 - [Getting Started and Installation](#getting-started-and-installation)
+- [Unittest](#unittest)
 
 ## Introduction
 
-Sports applications that showing teams and league information
+This sports application displays teams and league information, designed with simplicity in mind. It is intentionally kept lightweight, relying solely on Django without the need for additional libraries. The primary goal is to minimize code dependencies and keep the application as streamlined as possible.
 
 ## Features
 
- * Authentication and authorization user
- * Add, edit and delete `teams`
- * Add, edit and delete `tournament`
- * Bulk insert data using `csv`
- * Showing statistic for each teams
- * Showing rank for each teams
+ * Authenticate and authorize users
+ * Manage teams by adding, editing, and deleting
+ * Manage tournaments by adding, editing, and deleting
+ * Perform bulk data insertion using csv files
+ * Display team statistics
+ * Present team rankings
 
 ## Requirements
 
@@ -39,3 +40,5 @@ Sports applications that showing teams and league information
  * Run the server by using `make run` then the server will run at port `8000`
  * Login using default credential `admin` and password `admin` to login with example data
 
+## Unittest
+ * To run all unit test execute this command `make test`

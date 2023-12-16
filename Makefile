@@ -4,6 +4,8 @@ run:
 migrations:
 	poetry run python manage.py makemigrations
 
+test:
+	poetry run python manage.py test league
 export:
 	poetry export --without-hashes --without dev -f requirements.txt -o requirements.txt && \
 		pip install -r requirements.txt && \

@@ -1,18 +1,18 @@
-import json
 import csv
+import json
 import os
 from http import HTTPStatus
-from django.http import JsonResponse, HttpResponse
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import render
-from django.views.generic import TemplateView, View
 from django.contrib.auth.views import (
     LoginView as BaseLoginView,
     LogoutView as BaseLogoutView,
 )
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse_lazy
+from django.views.generic import TemplateView, View
 
 from .backends import (
     TournamentController,
@@ -95,6 +95,17 @@ class LeagueView(LoginRequiredMixin, View):
         if int(data["away_score"]) <= 0:
             return JsonResponse(
                 {"message": "Away score cannot zero"}, status=HTTPStatus.BAD_REQUEST
+            )
+
+        # validate if field is not correct
+        if "home_id" not in data:
+            return JsonResponse(
+                {"message": "Home id is required"}, status=HTTPStatus.BAD_REQUEST
+            )
+
+        if "away_id" not in data:
+            return JsonResponse(
+                {"message": "Away id is required"}, status=HTTPStatus.BAD_REQUEST
             )
 
         cls = TournamentController.from_payload(

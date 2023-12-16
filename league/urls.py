@@ -1,3 +1,5 @@
+from django.urls import path
+
 from .views import (
     HomeView,
     LeagueView,
@@ -8,7 +10,6 @@ from .views import (
     LoginView,
     LogoutView,
 )
-from django.urls import path
 
 urlpatterns = [
     # auth login
