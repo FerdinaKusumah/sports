@@ -11,6 +11,13 @@
     <div class="col-sm-12">
         <div class="jumbotron">
             <h1>League sports result</h1>
+            <form method="post" action="{% url 'logout' %}">
+              {% csrf_token %}
+              <button class="btn btn-danger btn-sm" type="submit">
+                <i class="ni ni-user-run text-red"></i>
+                <span>Logout</span>
+              </button>
+            </form>
         </div>
         <input id="csrfToken" type="hidden" value="{{ csrf_token }}">
         <div class="col-sm-12">

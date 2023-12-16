@@ -3,8 +3,16 @@ import csv
 import os
 from http import HTTPStatus
 from django.http import JsonResponse, HttpResponse
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render
 from django.views.generic import TemplateView, View
+from django.contrib.auth.views import (
+    LoginView as BaseLoginView,
+    LogoutView as BaseLogoutView,
+)
+from django.shortcuts import render
+from django.urls import reverse_lazy
 
 from .backends import (
     TournamentController,
@@ -20,14 +28,43 @@ from .backends import (
 # Create your views here.
 
 
-class HomeView(TemplateView):
+class LoginView(BaseLoginView):
+    template_name = "auth/login.html"
+    redirect_authenticated_user = True
+
+    def form_invalid(self, form):
+        messages.error(self.request, "Invalid username or password")
+        return self.render_to_response(self.get_context_data(form=form))
+
+    def get_success_url(self):
+        # if success redirect to home
+        return reverse_lazy("home")
+
+
+class LogoutView(BaseLogoutView):
+    next_page = "login"
+
+    def get_success_url(self):
+        # if success redirect to home
+        return reverse_lazy("login")
+
+
+class HomeView(LoginRequiredMixin, TemplateView):
+    # if user is not authenticated
+    login_url = "login"
+    redirect_field_name = "redirect_to"
+
     template_name = "home/index.html"
 
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name, {})
 
 
-class LeagueView(View):
+class LeagueView(LoginRequiredMixin, View):
+    # if user is not authenticated
+    login_url = "login"
+    redirect_field_name = "redirect_to"
+
     def post(self, request, *args, **kwargs):
         data = json.loads(request.body)
         cls = TournamentController.from_payload(
@@ -88,7 +125,11 @@ class LeagueView(View):
         return JsonResponse({"data": data}, status=HTTPStatus.OK)
 
 
-class TeamsView(View):
+class TeamsView(LoginRequiredMixin, View):
+    # if user is not authenticated
+    login_url = "login"
+    redirect_field_name = "redirect_to"
+
     def post(self, request, *args, **kwargs):
         data = json.loads(request.body)
         cls = TeamsController.from_payload(TeamsDtoRequest.from_payload(**data))
@@ -132,21 +173,33 @@ class TeamsView(View):
         return JsonResponse({"data": data}, status=HTTPStatus.OK)
 
 
-class StatisticView(View):
+class StatisticView(LoginRequiredMixin, View):
+    # if user is not authenticated
+    login_url = "login"
+    redirect_field_name = "redirect_to"
+
     def get(self, request, *args, **kwargs):
         cls = StatisticController()
         data = cls.get_statistic()
         return JsonResponse({"data": data}, status=HTTPStatus.OK)
 
 
-class RankView(View):
+class RankView(LoginRequiredMixin, View):
+    # if user is not authenticated
+    login_url = "login"
+    redirect_field_name = "redirect_to"
+
     def get(self, request, *args, **kwargs):
         cls = RankController()
         data = cls.calculate_rank()
         return JsonResponse({"data": data}, status=HTTPStatus.OK)
 
 
-class UploadView(View):
+class UploadView(LoginRequiredMixin, View):
+    # if user is not authenticated
+    login_url = "login"
+    redirect_field_name = "redirect_to"
+
     def get(self, request, *args, **kwargs):
         """Download example csv"""
         file_path = os.path.join(

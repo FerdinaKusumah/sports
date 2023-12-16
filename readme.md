@@ -15,6 +15,7 @@ Sports applications that showing teams and league information
 
 ## Features
 
+ * Authentication and authorization user
  * Add, edit and delete `teams`
  * Add, edit and delete `tournament`
  * Bulk insert data using `csv`
@@ -34,5 +35,7 @@ Sports applications that showing teams and league information
  * Install all dependencies by execute this command `make install`
  * Run migration by execute `make migrations && make migrate`
  * If you want all data is ready you can restore example data by execute `make restore`
+   * Otherwise you can create new user by execute this command `poetry run python manage.py createsuperuser` to create new users  
  * Run the server by using `make run` then the server will run at port `8000`
+ * Login using default credential `admin` and password `admin` to login with example data
 
